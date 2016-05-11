@@ -1,0 +1,146 @@
+﻿@model MongoTest.Models.PortalMongoModel
+@using MongoDB.Driver;
+@using MongoDB.Bson;
+@{
+    ViewBag.Title = "About";
+    string naslov = "";
+    string sadrzaj = "";
+    string autor = "";
+    string slika = "";
+    List<BsonValue> komentari = new List<BsonValue>();
+    List<string> identitet = new List<string>();
+    int brojac = 0;
+}
+@*<h2>@ViewBag.Title.</h2>
+<h3>@ViewBag.Message</h3>
+
+<p>Use this area to provide additional information.</p>*@
+<div style="margin-top: 30px;">
+    @foreach (var a in Model.Articles)
+    {
+        <table class="table table-bordered">
+            @foreach (var b in a.Elements)
+            {
+                switch (b.Name.ToString())
+                {
+                    case "Title":
+                        naslov = b.Value.ToString();
+                        break;
+                    case "Content":
+                        sadrzaj = b.Value.ToString();
+                        break;
+                    case "Author":
+                        autor = b.Value.ToString();
+                        break;
+                    case "Picture":
+                        slika = b.Value.ToString();
+                        break;
+                    case "Comments":
+                        komentari = b.Value.AsBsonArray.Values.ToList();
+                        break;
+                    case "_id":
+                        identitet.Add(b.Value.ToString());
+                        break;
+                    default:
+                        break;
+                }
+            }
+            <tr>
+                <td style="font-weight: bolder;">@naslov</td>
+                <td rowspan="3" style="height: 280px; vertical-align: middle; "><img class="slika" src=@slika /></td>
+            </tr>
+            <tr>
+                <td>@sadrzaj</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bolder;">@autor</td>
+            </tr>
+        </table>
+        <div class="text-center" style="margin-bottom: 25px;" id="broj-@brojac">
+            <h3>Comments:</h3>
+            @if (komentari.Count == 0)
+            {
+                <p>No comments yet ...</p>
+            }
+            else
+            {
+                foreach (var c in komentari)
+                {
+                    <p>@c[1].ToUniversalTime(): <strong>@c[0].ToString()</strong></p>
+                }
+            }
+            <div class="form-group" style="margin-top: 35px;">
+                @Html.LabelFor(m => m.NewComment, new { @class = "center_div control-label" })
+                <div class="col-md-12" id="pom-@brojac">
+                    <input type="text" class="center_div form-control" id="comm-@brojac"/>
+                    <div id="@identitet[brojac]"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-offset-2 center_div">
+                    <input type="submit" class="btn btn-default salji" value="Submit"/>
+                </div>
+            </div>
+        </div>
+        brojac++;
+    }
+</div>
+
+<script>
+    $(document).ready(function () {
+        for (i = 0; i < 10; i++) {
+            $("#comm-" + i).val("");
+        }
+    });
+    $(".salji").on("click", function () {
+        var comment;
+        var valueArt;
+        for (i = 0; i < 10; i++) {
+            if ($("#comm-" + i).val() != "") {
+                comment = $("#comm-" + i).val();
+                valueArt = $("#pom-" + i).children("div").attr('id')
+                console.log(valueArt);
+            }
+        }
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("Portal", "Home")",
+            datatype: "json",
+            traditional: true,
+            data: {
+                'CommentForArticle': comment,
+                'chosenArticle': valueArt
+            }
+        }).success(function () {
+            setTimeout(function () { window.location.reload() }, 100);
+        });
+    });
+    $(document).keypress(function (e) {
+        var comment;
+        var valueArt;
+        for (i = 0; i < 10; i++) {
+            if ($("#comm-" + i).val() != "") {
+                comment = $("#comm-" + i).val();
+                valueArt = $("#pom-" + i).children("div").attr('id')
+                console.log(valueArt);
+            }
+        }
+
+        if (e.which == 13)
+        {
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("Portal", "Home")",
+                datatype: "json",
+            traditional: true,
+            data: {
+                'CommentForArticle': comment,
+                'chosenArticle': valueArt
+            }
+        }).success(function () {
+            setTimeout(function () { window.location.reload() }, 100);
+        });
+        }
+    });
+</script>
